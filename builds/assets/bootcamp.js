@@ -49,151 +49,115 @@ function setupParallax() {
   requestAnimationFrame(tick);
 }
 
-function titleize(slug) {
-  return slug
-    .split('-')
-    .filter(Boolean)
-    .map((w) => w.slice(0, 1).toUpperCase() + w.slice(1))
-    .join(' ');
-}
+function setupStarPad() {
+  const canvas = document.getElementById('starCanvas');
+  const clearBtn = document.getElementById('starsClear');
+  const burstBtn = document.getElementById('starsBurst');
+  if (!(canvas instanceof HTMLCanvasElement)) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
 
-function getRepoInfo() {
-  const host = window.location.hostname;
-  const owner = host.split('.')[0] || '';
-  const repo = owner ? `${owner}.github.io` : '';
-  return {owner, repo, branch: 'main'};
-}
+  let width = 0;
+  let height = 0;
+  const stars = [];
 
-function setupRailWheelScroll() {
-  const rail = document.getElementById('appRail');
-  if (!rail) return;
-  rail.addEventListener(
-    'wheel',
-    (e) => {
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-      rail.scrollLeft += e.deltaY;
-    },
-    {passive: true},
-  );
-}
+  const resize = () => {
+    const r = canvas.getBoundingClientRect();
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    width = Math.max(1, Math.floor(r.width * dpr));
+    height = Math.max(1, Math.floor(r.height * dpr));
+    canvas.width = width;
+    canvas.height = height;
+  };
 
-function createAppCard({name, href}) {
-  const a = document.createElement('a');
-  a.className = 'card';
-  a.href = href;
-  a.setAttribute('role', 'listitem');
+  const addStar = (x, y, power = 1) => {
+    const s = {
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 0.9 * power,
+      vy: (Math.random() - 0.5) * 0.9 * power,
+      r: (1.4 + Math.random() * 2.8) * (0.7 + power * 0.6),
+      life: 1,
+      decay: 0.010 + Math.random() * 0.016,
+      hue: 255 + Math.random() * 20,
+    };
+    stars.push(s);
+  };
 
-  const top = document.createElement('div');
-  top.className = 'card__top';
-  const title = document.createElement('div');
-  title.className = 'card__title';
-  title.textContent = name;
-  const badge = document.createElement('span');
-  badge.className = 'badge badge--ok';
-  badge.textContent = 'Open';
-  top.append(title, badge);
+  const sprinkle = (clientX, clientY, power = 1) => {
+    const r = canvas.getBoundingClientRect();
+    const dpr = canvas.width / Math.max(1, r.width);
+    const x = (clientX - r.left) * dpr;
+    const y = (clientY - r.top) * dpr;
+    for (let i = 0; i < Math.floor(4 + power * 10); i++) addStar(x, y, power);
+  };
 
-  const body = document.createElement('div');
-  body.className = 'card__body';
-  body.textContent = 'Open build';
+  let dragging = false;
+  const onDown = (e) => {
+    dragging = true;
+    sprinkle(e.clientX, e.clientY, 1);
+  };
+  const onMove = (e) => {
+    if (!dragging) return;
+    sprinkle(e.clientX, e.clientY, 0.6);
+  };
+  const onUp = () => {
+    dragging = false;
+  };
 
-  const foot = document.createElement('div');
-  foot.className = 'card__footer';
-  const hint = document.createElement('span');
-  hint.className = 'card__hint';
-  hint.textContent = href.replace('./', '');
-  const arrow = document.createElement('span');
-  arrow.className = 'card__arrow';
-  arrow.setAttribute('aria-hidden', 'true');
-  arrow.textContent = '→';
-  foot.append(hint, arrow);
+  canvas.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove, {passive: true});
+  window.addEventListener('pointerup', onUp, {passive: true});
 
-  a.append(top, body, foot);
-  return a;
-}
-
-async function checkHref(href) {
-  try {
-    const res = await fetch(`${href}index.html`, {method: 'HEAD', cache: 'no-store'});
-    return res.ok;
-  } catch {
-    try {
-      const res = await fetch(`${href}index.html`, {cache: 'no-store'});
-      return res.ok;
-    } catch {
-      return false;
+  clearBtn?.addEventListener('click', () => {
+    stars.length = 0;
+  });
+  burstBtn?.addEventListener('click', () => {
+    for (let i = 0; i < 9; i++) {
+      const x = width * (0.25 + Math.random() * 0.5);
+      const y = height * (0.25 + Math.random() * 0.5);
+      for (let j = 0; j < 28; j++) addStar(x, y, 1.8);
     }
-  }
-}
+  });
 
-async function loadApps() {
-  const rail = document.getElementById('appRail');
-  const loading = document.getElementById('appsLoading');
-  if (!rail) return;
+  const draw = () => {
+    const theme = document.documentElement.dataset.theme;
+    ctx.clearRect(0, 0, width, height);
 
-  try {
-    const {owner, repo, branch} = getRepoInfo();
-    if (!owner || !repo) throw new Error('Could not derive repo info from hostname.');
-
-    const api = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/builds?ref=${encodeURIComponent(branch)}`;
-    const res = await fetch(api, {
-      cache: 'no-store',
-      headers: {
-        Accept: 'application/vnd.github+json',
-      },
-    });
-    if (!res.ok) throw new Error(`GitHub API returned ${res.status}`);
-
-    const items = await res.json();
-    const dirs = Array.isArray(items) ? items.filter((i) => i?.type === 'dir') : [];
-    const slugs = dirs
-      .map((d) => (typeof d?.name === 'string' ? d.name : ''))
-      .filter((n) => n && n !== 'assets' && !n.startsWith('.'))
-      .sort((a, b) => a.localeCompare(b));
-
-    loading?.remove();
-    if (slugs.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'card card--coming';
-      empty.setAttribute('role', 'listitem');
-      empty.innerHTML =
-        '<div class="card__top"><div class="card__title">No builds found</div><span class="badge badge--dim">Empty</span></div>' +
-        '<div class="card__body">Add a folder under <code>builds/</code> (with an <code>index.html</code>) and commit it.</div>' +
-        '<div class="card__footer"><span class="card__hint">Example: <code>builds/algolia-search/index.html</code></span></div>';
-      rail.appendChild(empty);
-      return;
+    ctx.fillStyle = theme === 'dark' ? 'rgba(224, 230, 255, 0.06)' : 'rgba(47, 48, 55, 0.06)';
+    for (let i = 0; i < 34; i++) {
+      const x = ((i * 173) % 997) / 997;
+      const y = ((i * 379) % 997) / 997;
+      ctx.fillRect(Math.floor(x * width), Math.floor(y * height), 1, 1);
     }
 
-    const cards = slugs.map((slug) => {
-      const href = `./${slug}/`;
-      const card = createAppCard({name: titleize(slug), href});
-      return {slug, href, card};
-    });
+    for (let i = stars.length - 1; i >= 0; i--) {
+      const s = stars[i];
+      s.x += s.vx;
+      s.y += s.vy;
+      s.vx *= 0.985;
+      s.vy *= 0.985;
+      s.life -= s.decay;
 
-    for (const c of cards) rail.appendChild(c.card);
+      const alpha = Math.max(0, s.life);
+      const grad = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 3.2);
+      grad.addColorStop(0, `rgba(255,255,255,${0.92 * alpha})`);
+      grad.addColorStop(0.25, `rgba(119,108,254,${0.64 * alpha})`);
+      grad.addColorStop(1, `rgba(74,58,200,0)`);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r * 3.2, 0, Math.PI * 2);
+      ctx.fill();
 
-    await Promise.all(
-      cards.map(async ({href, card}) => {
-        const badge = card.querySelector('.badge');
-        if (!badge) return;
-        const ok = await checkHref(href);
-        badge.textContent = ok ? 'Open' : 'Missing';
-        badge.classList.toggle('badge--ok', ok);
-        badge.classList.toggle('badge--warn', !ok);
-      }),
-    );
-  } catch (e) {
-    if (loading) {
-      const badge = loading.querySelector('.badge');
-      if (badge) {
-        badge.textContent = 'Error';
-        badge.classList.add('badge--warn');
-      }
-      const body = loading.querySelector('.card__body');
-      if (body) body.textContent = 'Could not list builds/ from GitHub.';
+      if (s.life <= 0) stars.splice(i, 1);
     }
-    console.warn(e);
-  }
+
+    requestAnimationFrame(draw);
+  };
+
+  resize();
+  window.addEventListener('resize', resize, {passive: true});
+  requestAnimationFrame(draw);
 }
 
 function setupMicVisualizer() {
@@ -231,10 +195,10 @@ function setupMicVisualizer() {
 
     ctx.clearRect(0, 0, w, h);
 
-    const baseY = h - 36;
-    const barCount = 64;
+    const baseY = h - 28;
+    const barCount = 72;
     const step = Math.floor(data.length / barCount);
-    const gap = 6;
+    const gap = 5;
     const barWidth = Math.floor((w - gap * (barCount + 1)) / barCount);
 
     const theme = document.documentElement.dataset.theme;
@@ -250,7 +214,7 @@ function setupMicVisualizer() {
     for (let i = 0; i < barCount; i++) {
       const v = data[i * step] / 255;
       const amp = Math.pow(v, 1.35);
-      const barH = Math.max(6, Math.floor(amp * (h - 78)));
+      const barH = Math.max(5, Math.floor(amp * (h - 54)));
 
       const x = gap + i * (barWidth + gap);
       const y = baseY - barH;
@@ -316,6 +280,6 @@ function setupMicVisualizer() {
 
 setupThemeToggle();
 setupParallax();
-setupRailWheelScroll();
-loadApps();
+setupStarPad();
 setupMicVisualizer();
+

@@ -4,89 +4,58 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bootcamp Builds</title>
-    <meta
-      name="description"
-      content="A simple directory of Bootcamp.com builds deployed on GitHub Pages."
-    />
+    <meta name="description" content="Bootcamp builds (curated)." />
     <link rel="icon" href="./assets/star.svg" type="image/svg+xml" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="./assets/bootcamp.css" />
   </head>
   <body>
     <div class="bg" aria-hidden="true">
       <div class="bg__layer bg__layer--gradient"></div>
       <div class="bg__layer bg__layer--dots"></div>
-      <div class="bg__layer bg__layer--blobs"></div>
     </div>
 
     <header class="top">
-      <a class="brand" href="./" aria-label="Bootcamp Builds home">
+      <div class="brand" aria-label="Bootcamp Builds">
         <img class="brand__mark" src="./assets/star.svg" alt="" />
         <span class="brand__name">Bootcamp Builds</span>
-      </a>
-
-      <div class="top__right">
-        <button class="toggle" id="themeToggle" type="button">
-          <span class="toggle__label" id="themeLabel">Dark mode</span>
-          <span class="toggle__pill" aria-hidden="true">
-            <span class="toggle__knob"></span>
-          </span>
-        </button>
       </div>
+
+      <button class="toggle" id="themeToggle" type="button" aria-label="Toggle dark mode">
+        <span class="toggle__label" id="themeLabel">Dark mode</span>
+        <span class="toggle__pill" aria-hidden="true">
+          <span class="toggle__knob"></span>
+        </span>
+      </button>
     </header>
 
     <main class="wrap">
       <section class="hero">
-        <div class="hero__copy">
-          <p class="kicker">team-bootcamp.github.io</p>
-          <h1 class="title">Builds Directory</h1>
-          <p class="sub">
-            Pick an app below. This list is generated automatically from the <code>builds/</code>
-            subfolders (listed via the GitHub API).
-          </p>
-
-          <div class="ctaRow">
-            <a class="cta" href="#apps">Browse apps</a>
-          </div>
-        </div>
+        <p class="kicker">team-bootcamp.github.io</p>
+        <h1 class="title">Welcome.</h1>
       </section>
 
-      <section class="section" id="apps" aria-labelledby="appsTitle">
-        <div class="section__head">
-          <h2 class="h2" id="appsTitle">Apps</h2>
-          <p class="muted">Auto-generated from <code>builds/</code>.</p>
-        </div>
-
-        <div class="rail" id="appRail" role="list" aria-live="polite">
-          <div class="card card--coming" role="listitem" aria-disabled="true" id="appsLoading">
-            <div class="card__top">
-              <div class="card__title">Loading…</div>
-              <span class="badge badge--dim">Please wait</span>
-            </div>
-            <div class="card__body">Fetching the directory manifest.</div>
-            <div class="card__footer">
-              <span class="card__hint">If this fails, GitHub API may be rate-limiting.</span>
-            </div>
+      <section class="panel" aria-labelledby="playTitle">
+        <div class="panel__head">
+          <h2 class="h2" id="playTitle">Star Pad</h2>
+          <div class="panel__actions">
+            <button class="btn btn--ghost" id="starsClear" type="button">Clear</button>
+            <button class="btn" id="starsBurst" type="button">Burst</button>
           </div>
         </div>
+        <p class="muted">Click or drag to sprinkle stars.</p>
+        <canvas class="canvas" id="starCanvas" width="1100" height="340"></canvas>
       </section>
 
-      <section class="section" id="visualizer" aria-labelledby="vizTitle">
-        <div class="section__head">
+      <section class="panel" aria-labelledby="vizTitle">
+        <div class="panel__head">
           <h2 class="h2" id="vizTitle">Mic Visualizer</h2>
-          <p class="muted">Optional. Only asks for mic after “Enable”.</p>
-        </div>
-
-        <div class="viz">
-          <div class="viz__controls">
+          <div class="panel__actions">
             <button class="btn" id="micEnable" type="button">Enable</button>
-            <button class="btn btn--ghost" id="micDisable" type="button" disabled>
-              Stop
-            </button>
-            <span class="viz__note" id="micNote">Idle</span>
+            <button class="btn btn--ghost" id="micDisable" type="button" disabled>Stop</button>
           </div>
-          <canvas class="viz__canvas" id="vizCanvas" width="1100" height="320"></canvas>
         </div>
+        <p class="muted" id="micNote">Idle</p>
+        <canvas class="canvas" id="vizCanvas" width="1100" height="240"></canvas>
       </section>
 
       <footer class="foot">
@@ -95,9 +64,7 @@
           Bootcamp.com
         </span>
         <span class="foot__right">
-          <a class="link" href="https://bootcamp.com" target="_blank" rel="noreferrer">
-            bootcamp.com
-          </a>
+          <a class="link" href="https://bootcamp.com" target="_blank" rel="noreferrer">bootcamp.com</a>
         </span>
       </footer>
     </main>
@@ -105,3 +72,4 @@
     <script type="module" src="./assets/bootcamp.js"></script>
   </body>
 </html>
+
