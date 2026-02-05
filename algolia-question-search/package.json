@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:docs": "vite build && node scripts/publish-to-docs.mjs",
+    "build:builds": "vite build && node scripts/publish-to-builds.mjs",
+    "build:apps": "npm run build:builds",
     "preview": "vite preview --host"
   },
   "dependencies": {

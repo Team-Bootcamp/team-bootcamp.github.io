@@ -9,7 +9,7 @@ const projectRoot = path.resolve(__dirname, '..');
 const distDir = path.join(projectRoot, 'dist');
 
 const repoRoot = path.resolve(projectRoot, '..');
-const targetDir = path.join(repoRoot, 'docs', 'algolia-search');
+const targetDir = path.join(repoRoot, 'builds', 'algolia-search');
 
 async function pathExists(p) {
   try {

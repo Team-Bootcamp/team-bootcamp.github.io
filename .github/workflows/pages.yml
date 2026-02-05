@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
     paths:
-      - docs/**
+      - builds/**
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -30,7 +30,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './docs'
+          path: './builds'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

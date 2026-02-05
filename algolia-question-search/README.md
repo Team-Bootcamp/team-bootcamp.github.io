@@ -21,7 +21,7 @@ The production build outputs to `dist/`.
 ## Copy build output into this repo
 
 ```bash
-npm run build:docs
+npm run build:builds
 ```
 
-This copies the production build into `docs/algolia-search/` at the repo root (handy if you want to use GitHub Pages “Deploy from a branch” with `/docs`).
+This copies the production build into `builds/algolia-search/` at the repo root.
